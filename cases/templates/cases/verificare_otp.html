@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <title>Verificare 2FA</title>
+</head>
+<body>
+    <h2>Introdu codul din aplicația de autentificare</h2>
+    {% if eroare %}
+        <p style="color:red;">{{ eroare }}</p>
+    {% endif %}
+    <form method="post">
+        {% csrf_token %}
+        <label>Cod TOTP: <input type="text" name="cod_otp" maxlength="6" required autofocus></label>
+        <button type="submit">Verifică</button>
+    </form>
+</body>
+</html>

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <title>Configurare 2FA</title>
+</head>
+<body>
+    <h2>Configurare autentificare în doi pași</h2>
+    <p>Scanează codul QR cu aplicația Aegis sau Google Authenticator:</p>
+    <img src="data:image/png;base64,{{ qr_base64 }}" alt="QR Code 2FA">
+    {% if eroare %}
+        <p style="color:red;">{{ eroare }}</p>
+    {% endif %}
+    <form method="post">
+        {% csrf_token %}
+        <label>Cod de confirmare: <input type="text" name="cod_otp" maxlength="6" required></label>
+        <button type="submit">Confirmă</button>
+    </form>
+</body>
+</html>

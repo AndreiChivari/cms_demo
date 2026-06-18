@@ -2,6 +2,42 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 from .utils import curata_diacritice
+from django.contrib.auth.models import AbstractUser
+
+class CustomUser(AbstractUser):
+    """
+    Modelul custom de utilizator al aplicației.
+    Moștenește tot de la AbstractUser și adaugă câmpuri specifice parchetului.
+    """
+    class Functie(models.TextChoices):
+        PROCUROR = 'PROCUROR', 'Procuror'
+        OFITER = 'OFITER', 'Ofițer de urmărire penală'
+        GREFIER = 'GREFIER', 'Grefier'
+        ADMIN = 'ADMIN', 'Administrator sistem'
+
+    functie = models.CharField(
+        max_length=20,
+        choices=Functie.choices,
+        blank=True, null=True
+    )
+    parafa = models.CharField(
+        max_length=20,
+        blank=True, null=True,
+        verbose_name="Parafă",
+        help_text="Codul de identificare al procurorului/ofițerului"
+    )
+    # Dacă utilizatorul și-a configurat 2FA
+    otp_configurat = models.BooleanField(
+        default=False,
+        verbose_name="2FA configurat"
+    )
+
+    class Meta:
+        verbose_name = "Utilizator"
+        verbose_name_plural = "Utilizatori"
+
+    def __str__(self):
+        return f"{self.get_full_name()} ({self.get_functie_display()})"
 
 
 class Dosar(models.Model):

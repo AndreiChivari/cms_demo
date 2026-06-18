@@ -38,11 +38,18 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    # django-otp
+    'django_otp',
+    'django_otp.plugins.otp_totp',
+
     # Aplicatiile proiectului
     'cases',
     'documents',
     'portal',
 ]
+
+# Modelul custom de utilizator
+AUTH_USER_MODEL = 'cases.CustomUser'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -50,9 +57,17 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    # OTPMiddleware trebuie să fie imediat după AuthenticationMiddleware
+    'django_otp.middleware.OTPMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Middleware-ul nostru custom — forțează 2FA
+    'cases.middleware.Force2FAMiddleware',
 ]
+
+LOGIN_URL = '/autentificare/'
+LOGIN_REDIRECT_URL = '/dashboard/'
+LOGOUT_REDIRECT_URL = '/autentificare/'
 
 ROOT_URLCONF = 'cms_demo.urls'
 

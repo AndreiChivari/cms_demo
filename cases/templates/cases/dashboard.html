@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+</head>
+<body>
+    <h2>Bun venit, {{ utilizator.get_full_name }}!</h2>
+    <p><a href="/logout/">Deconectare</a></p>
+    <h3>Dosare recente</h3>
+    <ul>
+        {% for dosar in dosare_recente %}
+            <li>{{ dosar }}</li>
+        {% empty %}
+            <li>Niciun dosar înregistrat încă.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
