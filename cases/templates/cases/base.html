@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block titlu %}CMS Demo{% endblock %}</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; }
+        
+        nav {
+            background: #1a237e;
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        nav a { color: white; text-decoration: none; margin-left: 1rem; }
+        nav a:hover { text-decoration: underline; }
+        
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f0f0f0; font-weight: bold; }
+        tr:hover { background: #fafafa; }
+        
+        .btn {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .btn-primary { background: #1a237e; color: white; }
+        .btn-secondary { background: #666; color: white; }
+        .btn:hover { opacity: 0.85; }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        .badge-activ { background: #c8e6c9; color: #1b5e20; }
+        .badge-suspendat { background: #fff9c4; color: #f57f17; }
+        .badge-inchis { background: #ffcdd2; color: #b71c1c; }
+        .badge-clasat { background: #e0e0e0; color: #333; }
+        
+        .pagination { display: flex; gap: 0.5rem; margin-top: 1rem; align-items: center; }
+        .pagination a, .pagination span {
+            padding: 0.4rem 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #1a237e;
+        }
+        .pagination .current { background: #1a237e; color: white; border-color: #1a237e; }
+        
+        .alert { padding: 0.75rem 1rem; border-radius: 4px; margin-bottom: 1rem; }
+        .alert-error { background: #ffcdd2; color: #b71c1c; }
+        .alert-success { background: #c8e6c9; color: #1b5e20; }
+        
+        form label { display: block; margin-bottom: 0.25rem; font-weight: bold; }
+        form input, form select, form textarea {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+        form textarea { min-height: 100px; resize: vertical; }
+    </style>
+</head>
+<body>
+    <nav>
+        <strong>CMS Demo — Parchet</strong>
+        {% if request.user.is_authenticated %}
+            <div>
+                <span>{{ request.user.get_full_name|default:request.user.username }}</span>
+                <a href="{% url 'lista_dosare' %}">Dosare</a>
+                <a href="{% url 'logout' %}">Deconectare</a>
+            </div>
+        {% endif %}
+    </nav>
+
+    <div class="container">
+        {% block continut %}{% endblock %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,85 @@
+{% extends 'cases/base.html' %}
+{% block titlu %}Dosar {{ dosar.numar_unic }}{% endblock %}
+
+{% block continut %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <h2>Dosar {{ dosar.numar_unic }}</h2>
+    <a href="{% url 'lista_dosare' %}" class="btn btn-secondary">← Înapoi la listă</a>
+</div>
+
+<div class="card">
+    <h3 style="margin-bottom: 1rem;">Date generale</h3>
+    <table>
+        <tr><th style="width:200px">Infracțiunea cercetată</th><td>{{ dosar.infractiune_cercetata }}</td></tr>
+        <tr><th>Stare</th>
+            <td><span class="badge badge-{{ dosar.stare|lower }}">{{ dosar.get_stare_display }}</span></td>
+        </tr>
+        <tr><th>Data deschiderii</th><td>{{ dosar.data_deschiderii|date:"d.m.Y" }}</td></tr>
+        <tr><th>Procuror</th><td>{{ dosar.procuror_caz.get_full_name|default:"Nedesemnat" }}</td></tr>
+        <tr><th>Ofițer</th><td>{{ dosar.ofiter_caz.get_full_name|default:"Nedesemnat" }}</td></tr>
+        {% if dosar.descriere %}
+        <tr><th>Descriere</th><td>{{ dosar.descriere }}</td></tr>
+        {% endif %}
+    </table>
+</div>
+
+<div class="card">
+    <h3 style="margin-bottom: 1rem;">Părți implicate</h3>
+    <table>
+        <thead>
+            <tr><th>Nume</th><th>Calitate</th><th>Email</th></tr>
+        </thead>
+        <tbody>
+            {% for parte in parti %}
+            <tr>
+                <td>{{ parte.nume_complet }}</td>
+                <td>{{ parte.get_calitate_display }}</td>
+                <td>{{ parte.email|default:"—" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3">Nicio persoană înregistrată.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <h3 style="margin-bottom: 1rem;">Infracțiuni</h3>
+    <table>
+        <thead>
+            <tr><th>Încadrare juridică</th><th>Data comiterii</th><th>Adresa</th></tr>
+        </thead>
+        <tbody>
+            {% for inf in infractiuni %}
+            <tr>
+                <td>{{ inf.incadrare_juridica }}</td>
+                <td>{{ inf.data_comiterii|date:"d.m.Y"|default:"—" }}</td>
+                <td>{{ inf.adresa_comiterii|default:"—" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3">Nicio infracțiune înregistrată.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <h3 style="margin-bottom: 1rem;">Stadii cercetare</h3>
+    <table>
+        <thead>
+            <tr><th>Tip</th><th>Data</th><th>Observații</th></tr>
+        </thead>
+        <tbody>
+            {% for stadiu in stadii %}
+            <tr>
+                <td>{{ stadiu.get_tip_display }}</td>
+                <td>{{ stadiu.data|date:"d.m.Y" }}</td>
+                <td>{{ stadiu.observatii|default:"—" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3">Niciun stadiu înregistrat.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

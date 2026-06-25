@@ -1,19 +1,46 @@
-<!DOCTYPE html>
-<html lang="ro">
-<head>
-    <meta charset="UTF-8">
-    <title>Dashboard</title>
-</head>
-<body>
-    <h2>Bun venit, {{ utilizator.get_full_name }}!</h2>
-    <p><a href="/logout/">Deconectare</a></p>
-    <h3>Dosare recente</h3>
-    <ul>
-        {% for dosar in dosare_recente %}
-            <li>{{ dosar }}</li>
-        {% empty %}
-            <li>Niciun dosar înregistrat încă.</li>
-        {% endfor %}
-    </ul>
-</body>
-</html>
+{% extends 'cases/base.html' %}
+{% block titlu %}Dashboard{% endblock %}
+
+{% block continut %}
+<h2 style="margin-bottom: 1rem;">Dashboard</h2>
+
+<div class="card">
+    <h3>Bun venit, {{ utilizator.get_full_name|default:utilizator.username }}!</h3>
+    <p style="margin-top: 0.5rem; color: #666;">
+        {% if utilizator.functie %}Funcție: {{ utilizator.get_functie_display }}{% endif %}
+    </p>
+</div>
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3>Dosare recente</h3>
+        <a href="{% url 'lista_dosare' %}" class="btn btn-primary">Vezi toate</a>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Număr</th>
+                <th>Infracțiunea</th>
+                <th>Stare</th>
+                <th>Data</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for dosar in dosare_recente %}
+            <tr>
+                <td><a href="{% url 'detalii_dosar' dosar.pk %}">{{ dosar.numar_unic }}</a></td>
+                <td>{{ dosar.infractiune_cercetata }}</td>
+                <td>
+                    <span class="badge badge-{{ dosar.stare|lower }}">
+                        {{ dosar.get_stare_display }}
+                    </span>
+                </td>
+                <td>{{ dosar.data_deschiderii|date:"d.m.Y" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4">Niciun dosar înregistrat.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

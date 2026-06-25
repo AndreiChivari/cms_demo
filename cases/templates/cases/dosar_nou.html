@@ -1,0 +1,32 @@
+{% extends 'cases/base.html' %}
+{% block titlu %}Dosar nou{% endblock %}
+
+{% block continut %}
+<h2 style="margin-bottom: 1rem;">Dosar nou</h2>
+
+<div class="card">
+    {% if eroare %}
+        <div class="alert alert-error">{{ eroare }}</div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        <label for="numar_unic">Număr unic *</label>
+        <input type="text" id="numar_unic" name="numar_unic"
+               placeholder="ex: 1/P/2026" required>
+
+        <label for="infractiune_cercetata">Infracțiunea cercetată *</label>
+        <input type="text" id="infractiune_cercetata" name="infractiune_cercetata"
+               placeholder="ex: Art. 208 Cod Penal — Furt" required>
+
+        <label for="descriere">Descriere (opțional)</label>
+        <textarea id="descriere" name="descriere"
+                  placeholder="Descriere succintă a cazului..."></textarea>
+
+        <div style="display: flex; gap: 1rem;">
+            <button type="submit" class="btn btn-primary">Creează dosarul</button>
+            <a href="{% url 'lista_dosare' %}" class="btn btn-secondary">Anulează</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

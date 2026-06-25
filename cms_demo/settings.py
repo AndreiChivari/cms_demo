@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     # django-otp
     'django_otp',
     'django_otp.plugins.otp_totp',
+    'simple_history',       # ← adaugă
 
     # Aplicatiile proiectului
     'cases',
@@ -61,6 +62,7 @@ MIDDLEWARE = [
     'django_otp.middleware.OTPMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'simple_history.middleware.HistoryRequestMiddleware',  # ← adaugă
     # Middleware-ul nostru custom — forțează 2FA
     'cases.middleware.Force2FAMiddleware',
 ]

@@ -1,0 +1,78 @@
+{% extends 'cases/base.html' %}
+{% block titlu %}Lista Dosare{% endblock %}
+
+{% block continut %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <h2>Dosare</h2>
+    <a href="{% url 'dosar_nou' %}" class="btn btn-primary">+ Dosar nou</a>
+</div>
+
+<div class="card">
+    <form method="get" style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+        <input type="text" name="q" value="{{ termen }}"
+               placeholder="Caută după număr sau infracțiune..."
+               style="flex: 1; margin-bottom: 0;">
+        <select name="stare" style="width: auto; margin-bottom: 0;">
+            <option value="">Toate stările</option>
+            {% for val, eticheta in stari %}
+                <option value="{{ val }}" {% if stare == val %}selected{% endif %}>
+                    {{ eticheta }}
+                </option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-primary">Caută</button>
+        {% if termen or stare %}
+            <a href="{% url 'lista_dosare' %}" class="btn btn-secondary">Resetează</a>
+        {% endif %}
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Număr unic</th>
+                <th>Infracțiunea cercetată</th>
+                <th>Stare</th>
+                <th>Procuror</th>
+                <th>Data deschiderii</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for dosar in page_obj %}
+            <tr>
+                <td><a href="{% url 'detalii_dosar' dosar.pk %}">{{ dosar.numar_unic }}</a></td>
+                <td>{{ dosar.infractiune_cercetata }}</td>
+                <td>
+                    <span class="badge badge-{{ dosar.stare|lower }}">
+                        {{ dosar.get_stare_display }}
+                    </span>
+                </td>
+                <td>{{ dosar.procuror_caz.get_full_name|default:"—" }}</td>
+                <td>{{ dosar.data_deschiderii|date:"d.m.Y" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5">Niciun dosar găsit.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}&q={{ termen }}&stare={{ stare }}">
+                ← Anterior
+            </a>
+        {% endif %}
+
+        <span class="current">
+            Pagina {{ page_obj.number }} din {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}&q={{ termen }}&stare={{ stare }}">
+                Următor →
+            </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

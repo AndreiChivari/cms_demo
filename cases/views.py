@@ -7,6 +7,10 @@ import qrcode
 import qrcode.image.svg
 from io import BytesIO
 import base64
+from django.core.paginator import Paginator
+from django.db.models import Q
+from cases.models import Dosar, ParteImplicata, Infractiune
+from cases.utils import curata_diacritice
 
 
 def view_autentificare(request):
@@ -129,3 +133,101 @@ def view_dashboard(request):
         'dosare_recente': dosare_recente,
         'utilizator': request.user
     })
+
+@login_required
+def lista_dosare(request):
+    """
+    Afișează lista paginată a dosarelor cu căutare și filtrare.
+    Demonstrează: QuerySet lazy, Q objects, Paginator.
+    """
+    # Pornim cu toate dosarele, ordonate descrescător după dată
+    queryset = Dosar.objects.select_related(
+        'procuror_caz', 'ofiter_caz'
+    ).order_by('-data_deschiderii')
+    # select_related face JOIN în SQL și aduce datele utilizatorilor
+    # legați prin FK într-o singură interogare, în loc de N interogări separate
+    # (problema N+1: fără select_related, pentru 50 dosare → 51 interogări SQL)
+
+    # Căutare full-text
+    termen = request.GET.get('q', '').strip()
+    if termen:
+        termen_ascii = curata_diacritice(termen)
+        queryset = queryset.filter(
+            Q(numar_unic__icontains=termen) |
+            Q(infractiune_cercetata_ascii__icontains=termen_ascii) |
+            Q(parti_implicate__nume_complet_ascii__icontains=termen_ascii)
+        )
+
+    # Filtru după stare
+    stare = request.GET.get('stare', '')
+    if stare:
+        queryset = queryset.filter(stare=stare)
+
+    # Paginare — 10 dosare per pagină
+    paginator = Paginator(queryset, 10)
+    numar_pagina = request.GET.get('page', 1)
+    page_obj = paginator.get_page(numar_pagina)
+    # get_page() e mai sigur decât page() — dacă numărul e invalid
+    # (ex: 'abc' sau pagina 999 din 5), returnează prima/ultima pagină
+    # în loc să ridice excepție
+
+    return render(request, 'cases/lista_dosare.html', {
+        'page_obj': page_obj,
+        'termen': termen,
+        'stare': stare,
+        'stari': Dosar.StareDosar.choices,  # pentru dropdown-ul de filtrare
+    })
+
+
+@login_required
+def detalii_dosar(request, pk):
+    """
+    Afișează detaliile complete ale unui dosar.
+    pk vine din URL: /dosare/5/ → pk=5
+    """
+    from django.shortcuts import get_object_or_404
+    
+    dosar = get_object_or_404(Dosar, pk=pk)
+    # get_object_or_404: dacă dosarul nu există → returnează automat
+    # pagina 404, în loc să ridice excepție DoesNotExist neprinsă
+
+    parti = dosar.parti_implicate.all()
+    infractiuni = dosar.infractiuni.all()
+    stadii = dosar.stadii.order_by('-data')
+
+    return render(request, 'cases/detalii_dosar.html', {
+        'dosar': dosar,
+        'parti': parti,
+        'infractiuni': infractiuni,
+        'stadii': stadii,
+    })
+
+
+@login_required
+def dosar_nou(request):
+    """
+    Formular pentru crearea unui dosar nou.
+    Demonstrează: procesarea manuală a formularului POST.
+    În Etapa 6 vom introduce Django Forms pentru validare automată.
+    """
+    eroare = None
+
+    if request.method == 'POST':
+        numar_unic = request.POST.get('numar_unic', '').strip()
+        infractiune = request.POST.get('infractiune_cercetata', '').strip()
+        descriere = request.POST.get('descriere', '').strip()
+
+        if not numar_unic or not infractiune:
+            eroare = "Numărul unic și infracțiunea sunt obligatorii."
+        elif Dosar.objects.filter(numar_unic=numar_unic).exists():
+            eroare = f"Există deja un dosar cu numărul {numar_unic}."
+        else:
+            dosar = Dosar.objects.create(
+                numar_unic=numar_unic,
+                infractiune_cercetata=infractiune,
+                descriere=descriere,
+                procuror_caz=request.user,
+            )
+            return redirect('detalii_dosar', pk=dosar.pk)
+
+    return render(request, 'cases/dosar_nou.html', {'eroare': eroare})

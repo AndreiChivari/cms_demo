@@ -3,6 +3,7 @@ from django.conf import settings
 from django.utils import timezone
 from .utils import curata_diacritice
 from django.contrib.auth.models import AbstractUser
+from simple_history.models import HistoricalRecords
 
 class CustomUser(AbstractUser):
     """
@@ -87,6 +88,8 @@ class Dosar(models.Model):
         max_length=200, blank=True, editable=False
     )
 
+    history = HistoricalRecords()  # ← adaugă la sfârșitul câmpurilor, înainte de Meta
+
     class Meta:
         verbose_name = "Dosar"
         verbose_name_plural = "Dosare"
@@ -136,6 +139,8 @@ class ParteImplicata(models.Model):
     nume_complet_ascii = models.CharField(max_length=200, blank=True, editable=False)
     adresa_ascii = models.CharField(max_length=300, blank=True, editable=False)
 
+    history = HistoricalRecords()  # ← adaugă la sfârșitul câmpurilor, înainte de Meta
+
     class Meta:
         verbose_name = "Parte Implicată"
         verbose_name_plural = "Părți Implicate"
@@ -175,6 +180,8 @@ class Infractiune(models.Model):
     incadrare_juridica_ascii = models.CharField(max_length=200, blank=True, editable=False)
     adresa_comiterii_ascii = models.CharField(max_length=300, blank=True, editable=False)
 
+    history = HistoricalRecords()  # ← adaugă la sfârșitul câmpurilor, înainte de Meta
+
     class Meta:
         verbose_name = "Infracțiune"
         verbose_name_plural = "Infracțiuni"
@@ -213,6 +220,7 @@ class StadiuCercetare(models.Model):
         on_delete=models.SET_NULL,
         null=True
     )
+    history = HistoricalRecords()  # ← adaugă la sfârșitul câmpurilor, înainte de Meta
 
     class Meta:
         verbose_name = "Stadiu Cercetare"
@@ -248,6 +256,7 @@ class MasuraPreventiva(models.Model):
         on_delete=models.SET_NULL,
         null=True
     )
+    history = HistoricalRecords()  # ← adaugă la sfârșitul câmpurilor, înainte de Meta
 
     class Meta:
         verbose_name = "Măsură Preventivă"

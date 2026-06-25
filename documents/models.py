@@ -6,6 +6,7 @@ from cases.models import Dosar
 from cases.utils import curata_diacritice
 import os
 import uuid
+from simple_history.models import HistoricalRecords
 
 
 def cale_upload_document(instance, filename):
@@ -86,6 +87,8 @@ class ActUrmarire(models.Model):
         related_name='acte_semnate_de_mine'
     )
     data_semnarii = models.DateTimeField(null=True, blank=True)
+
+    history = HistoricalRecords()  # ← adaugă la sfârșitul câmpurilor, înainte de Meta
 
     class Meta:
         verbose_name = "Act de Urmărire Penală"
