@@ -4,6 +4,8 @@ from django.utils import timezone
 from .utils import curata_diacritice
 from django.contrib.auth.models import AbstractUser
 from simple_history.models import HistoricalRecords
+from .fields import EncryptedField
+from .crypto import calculeaza_hmac
 
 class CustomUser(AbstractUser):
     """
@@ -121,11 +123,17 @@ class ParteImplicata(models.Model):
         related_name='parti_implicate'
     )
     nume_complet = models.CharField(max_length=200)
-    cnp = models.CharField(
-        max_length=13,
+
+    cnp = EncryptedField(
         blank=True, null=True,
         verbose_name="CNP"
-        # În Etapa 7: devine EncryptedField + cnp_hash pentru căutare
+    )
+    # Hash HMAC pentru căutare — nu poate fi inversat fără cheia secretă
+    cnp_hash = models.CharField(
+        max_length=64,
+        blank=True, null=True,
+        editable=False,  # invizibil în formulare și admin
+        verbose_name="CNP Hash (index)"
     )
     calitate = models.CharField(
         max_length=30,
@@ -149,6 +157,9 @@ class ParteImplicata(models.Model):
         return f"{self.nume_complet} ({self.get_calitate_display()}) — {self.dosar.numar_unic}"
 
     def save(self, *args, **kwargs):
+        # Calculăm hash-ul ÎNAINTE de criptare — lucrăm cu CNP-ul în clar
+        if self.cnp:
+            self.cnp_hash = calculeaza_hmac(self.cnp)
         self.nume_complet_ascii = curata_diacritice(self.nume_complet)
         self.adresa_ascii = curata_diacritice(self.adresa)
         super().save(*args, **kwargs)

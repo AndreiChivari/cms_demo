@@ -5,7 +5,6 @@ from .models import (
     CustomUser, Dosar, ParteImplicata,
     Infractiune, StadiuCercetare, MasuraPreventiva
 )
-from simple_history.admin import SimpleHistoryAdmin
 
 
 # ——— Inline-uri ———————————————————————————————————————————
