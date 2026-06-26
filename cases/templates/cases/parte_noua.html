@@ -1,0 +1,140 @@
+{% extends 'cases/base.html' %}
+{% block titlu %}Adaugă persoană — Dosar {{ dosar.numar_unic }}{% endblock %}
+
+{% block continut %}
+<h2 style="margin-bottom: 1rem;">
+    Adaugă persoană — Dosar {{ dosar.numar_unic }}
+</h2>
+
+<div class="card">
+    <h3 style="margin-bottom: 1rem;">Scanare automată act de identitate</h3>
+    <p style="color: #666; margin-bottom: 1rem;">
+        Încarcă o fotografie a buletinului pentru autocompletare automată.
+        Verifică datele extrase înainte de salvare.
+    </p>
+
+    <div style="display: flex; gap: 1rem; align-items: flex-start; margin-bottom: 1.5rem;">
+        <input type="file" id="input_imagine" accept=".jpg,.jpeg,.png"
+               style="flex: 1;">
+        <button type="button" id="btn_ocr" class="btn btn-primary"
+                onclick="ruleazaOCR()">
+            Extrage date automat
+        </button>
+    </div>
+
+    <div id="status_ocr" style="display:none;" class="alert"></div>
+</div>
+
+<div class="card">
+    <h3 style="margin-bottom: 1rem;">Date persoană</h3>
+
+    {% if eroare %}
+        <div class="alert alert-error">{{ eroare }}</div>
+    {% endif %}
+
+    <form method="post" id="form_parte">
+        {% csrf_token %}
+        <input type="hidden" name="dosar_id" value="{{ dosar.pk }}">
+
+        <label for="nume_complet">Nume complet *</label>
+        <input type="text" id="nume_complet" name="nume_complet"
+               value="{{ date_initiale.nume_complet|default:'' }}" required>
+
+        <label for="cnp">CNP</label>
+        <input type="text" id="cnp" name="cnp"
+               value="{{ date_initiale.cnp|default:'' }}"
+               maxlength="13" placeholder="13 cifre">
+
+        <label for="calitate">Calitate procesuală *</label>
+        <select id="calitate" name="calitate">
+            {% for val, eticheta in calitati %}
+                <option value="{{ val }}">{{ eticheta }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="adresa">Adresă</label>
+        <input type="text" id="adresa" name="adresa"
+               value="{{ date_initiale.adresa|default:'' }}">
+
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email">
+
+        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+            <button type="submit" class="btn btn-primary">Salvează persoana</button>
+            <a href="{% url 'detalii_dosar' dosar.pk %}"
+               class="btn btn-secondary">Anulează</a>
+        </div>
+    </form>
+</div>
+
+<script>
+const csrfToken = document.cookie
+    .split('; ')
+    .find(r => r.startsWith('csrftoken='))
+    ?.split('=')[1];
+
+async function ruleazaOCR() {
+    const input = document.getElementById('input_imagine');
+    const status = document.getElementById('status_ocr');
+    const btn = document.getElementById('btn_ocr');
+
+    if (!input.files.length) {
+        afiseazaStatus('Selectează mai întâi o imagine.', false);
+        return;
+    }
+
+    // Construim FormData — singurul mod de a trimite fișiere prin fetch
+    const formData = new FormData();
+    formData.append('imagine', input.files[0]);
+
+    btn.disabled = true;
+    btn.textContent = 'Se procesează...';
+    afiseazaStatus('OCR în curs — poate dura câteva secunde...', true);
+
+    try {
+        const response = await fetch("{% url 'proceseaza_ocr' %}", {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken },
+            body: formData
+        });
+
+        const date = await response.json();
+
+        if (date.succes) {
+            // Autocompletare câmpuri formular
+            if (date.cnp) {
+                document.getElementById('cnp').value = date.cnp;
+            }
+            if (date.nume_complet) {
+                document.getElementById('nume_complet').value = date.nume_complet;
+            }
+            if (date.adresa) {
+                document.getElementById('adresa').value = date.adresa;
+            }
+
+            const gasite = [date.cnp, date.nume_complet, date.adresa]
+                .filter(Boolean).length;
+            afiseazaStatus(
+                `OCR finalizat. ${gasite}/3 câmpuri completate automat. ` +
+                `Verifică datele înainte de salvare.`,
+                true
+            );
+        } else {
+            afiseazaStatus(`Eroare OCR: ${date.eroare}`, false);
+        }
+    } catch (err) {
+        afiseazaStatus('Eroare de comunicare cu serverul.', false);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Extrage date automat';
+    }
+}
+
+function afiseazaStatus(mesaj, succes) {
+    const el = document.getElementById('status_ocr');
+    el.style.display = 'block';
+    el.className = `alert ${succes ? 'alert-success' : 'alert-error'}`;
+    el.textContent = mesaj;
+}
+</script>
+{% endblock %}

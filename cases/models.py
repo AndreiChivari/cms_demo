@@ -35,6 +35,17 @@ class CustomUser(AbstractUser):
         verbose_name="2FA configurat"
     )
 
+    # Cheia privată stocată criptată cu Fernet
+    cheie_privata_criptata = models.BinaryField(
+        null=True, blank=True,
+        verbose_name="Cheie privată (criptată)"
+    )
+    # Certificatul public în format PEM — nu e secret, nu necesită criptare
+    certificat_pem = models.TextField(
+        null=True, blank=True,
+        verbose_name="Certificat public (PEM)"
+    )
+
     class Meta:
         verbose_name = "Utilizator"
         verbose_name_plural = "Utilizatori"
@@ -201,8 +212,38 @@ class Infractiune(models.Model):
         return f"{self.incadrare_juridica} — {self.dosar.numar_unic}"
 
     def save(self, *args, **kwargs):
+        # Câmpurile shadow
         self.incadrare_juridica_ascii = curata_diacritice(self.incadrare_juridica)
         self.adresa_comiterii_ascii = curata_diacritice(self.adresa_comiterii)
+
+            # Geocodare — doar dacă adresa există și s-a schimbat
+        # sau dacă coordonatele lipsesc
+        if self.adresa_comiterii and (
+            not self.latitudine or not self.longitudine
+        ):
+            try:
+                from geopy.geocoders import Nominatim
+                from geopy.exc import GeocoderTimedOut, GeocoderUnavailable
+
+                geolocator = Nominatim(
+                    user_agent="cms_demo_licenta"
+                    # User-Agent obligatoriu — Nominatim blochează
+                    # request-urile fără identificare
+                )
+
+                locatie = geolocator.geocode(
+                    self.adresa_comiterii,
+                    timeout=5  # 5 secunde timeout — nu blocăm serverul la infinit
+                )
+
+                if locatie:
+                    self.latitudine = locatie.latitude
+                    self.longitudine = locatie.longitude
+
+            except Exception:
+                # Dacă geocodarea eșuează (timeout, indisponibil, adresă negăsită)
+                # salvăm infracțiunea fără coordonate — nu oprim fluxul
+                pass
         super().save(*args, **kwargs)
 
 

@@ -1,0 +1,73 @@
+{% extends 'cases/base.html' %}
+{% block titlu %}Harta Infracționalității{% endblock %}
+
+{% block continut %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+    <h2>Harta Infracționalității</h2>
+    <span style="color:#666;">{{ total }} infracțiuni geocodate</span>
+</div>
+
+{% if total == 0 %}
+<div class="card">
+    <p style="color:#666;">
+        Nicio infracțiune cu coordonate geocodate.
+        Adaugă infracțiuni cu adrese valide pentru a le vedea pe hartă.
+    </p>
+</div>
+{% else %}
+
+<!-- Containerul hărții — înălțimea e obligatorie, altfel Leaflet randează invizibil -->
+<div id="harta" style="height: 600px; border-radius: 8px; overflow: hidden;"></div>
+
+<!-- Leaflet CSS și JS — încărcate din CDN, fără instalare -->
+<link rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+// Datele din Django — json_script e un filtru Django care
+// serializează JSON sigur, previne XSS
+const markeri = {{ markeri_json|safe }};
+
+// Inițializează harta centrată pe România
+// setView([lat, lon], zoom) — zoom 7 = nivel țară
+const harta = L.map('harta').setView([45.9432, 24.9668], 7);
+
+// Adaugă tile-urile OpenStreetMap — imaginile hărții
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 19
+}).addTo(harta);
+
+// Plasează câte un marker pentru fiecare infracțiune
+markeri.forEach(function(inf) {
+    const marker = L.marker([inf.lat, inf.lon]);
+    
+    // Popup cu detaliile infracțiunii — apare la click pe marker
+    const continutPopup = `
+        <div style="min-width: 200px;">
+            <strong>${inf.incadrare}</strong><br>
+            <span style="color:#666; font-size:0.85em;">${inf.adresa}</span><br>
+            <span style="color:#666; font-size:0.85em;">Data: ${inf.data}</span><br>
+            <hr style="margin: 0.5rem 0;">
+            <a href="${inf.dosar_url}">
+                Dosar ${inf.dosar_numar} →
+            </a>
+        </div>
+    `;
+    
+    marker.bindPopup(continutPopup);
+    marker.addTo(harta);
+});
+
+// Dacă există markeri, ajustează zoom-ul să îi cuprindă pe toți
+if (markeri.length > 0) {
+    const grup = L.featureGroup(
+        markeri.map(inf => L.marker([inf.lat, inf.lon]))
+    );
+    harta.fitBounds(grup.getBounds().pad(0.1));
+    // pad(0.1) adaugă 10% spațiu în jurul markerilor — estetică
+}
+</script>
+{% endif %}
+{% endblock %}

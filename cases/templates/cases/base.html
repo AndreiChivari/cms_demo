@@ -92,6 +92,7 @@
             <div>
                 <span>{{ request.user.get_full_name|default:request.user.username }}</span>
                 <a href="{% url 'lista_dosare' %}">Dosare</a>
+                <a href="{% url 'harta' %}">Hartă</a>  <!-- adaugă această linie -->
                 <a href="{% url 'logout' %}">Deconectare</a>
             </div>
         {% endif %}

@@ -152,3 +152,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Fisiere incarcate de utilizator
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Calea către executabilul Tesseract — specifică Windows
+TESSERACT_CMD = os.getenv(
+    'TESSERACT_CMD',
+    r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+)
